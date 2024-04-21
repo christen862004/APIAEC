@@ -1,0 +1,6 @@
+@APIAEC_HostAddress = http://localhost:5091
+
+GET {{APIAEC_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
