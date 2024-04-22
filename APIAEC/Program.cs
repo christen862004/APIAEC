@@ -11,13 +11,19 @@ namespace APIAEC
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .ConfigureApiBehaviorOptions(options =>
+                    options.SuppressModelStateInvalidFilter = true); 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<ITIContext>(options =>
                 options.UseSqlServer("Data Source=.;Initial Catalog=ITI_WebAPI_AEC44;Integrated Security=True;Encrypt=False")
             );
+            builder.Services.AddCors(options => {
+                options.AddPolicy("MyPolicy", builder =>
+                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            });
 
             var app = builder.Build();
 
@@ -27,6 +33,9 @@ namespace APIAEC
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseStaticFiles();//extension wwwroot
+            
+            app.UseCors("MyPolicy");//custim
             
             app.UseAuthorization();
 

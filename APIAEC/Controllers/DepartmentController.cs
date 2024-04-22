@@ -1,6 +1,8 @@
-﻿using APIAEC.Models;
+﻿using APIAEC.DTO;
+using APIAEC.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace APIAEC.Controllers
 {
@@ -16,27 +18,37 @@ namespace APIAEC.Controllers
         }
         //method name the same verb
         [HttpGet]//api/department:get
-        public IActionResult GetAllDEpartment()//wrap response
+        public ActionResult<GeneralResponse> GetAllDEpartment()//wrap response
         {
-            List<Department> deptList= context.Department.ToList();
-            return Ok(deptList);
+            List<DEpartmentDto> deptList= context.Department
+                .Select(d=>
+                new DEpartmentDto() {DeptID=d.Id,DeptName=d.Name })
+                .ToList();
+            GeneralResponse response = new GeneralResponse();
+            response.IsPass = true;
+            response.Data = deptList;
+            //mapping
+            return response;
         }
+
+        [HttpGet("emp")]//api/department/emps
+        public IActionResult GetAllDEpartmentWithEmp()
+        {
+            List<DeptWithEmpsDto> depts= 
+                context.Department.Include(d => d.Employees).Select(
+                    d=>new DeptWithEmpsDto()
+                    {
+                        DeptName=d.Name,
+                        DeptId=d.Id,
+                        Employees=d.Employees.Select(e=>e.Name).ToList()
+                    }).ToList();
+            return Ok(depts);
+        }
+
         //view- content -file -json
         //respons :OK (200) - create (201) -unauthorize(401) - notFound(404)
         //OkREult
-
-
-
-
-
-
-
-
-
-
-
-        [HttpGet]
-        [Route("{id:int}")]//api/department/1
+        [HttpGet("{id:int}",Name ="GetDeptByIDRoute")]//api/department/1
         public IActionResult GetByID(int id)
         {
             Department dept=context.Department.FirstOrDefault(d=>d.Id==id);
@@ -47,8 +59,7 @@ namespace APIAEC.Controllers
             return Ok(dept);
         }
 
-        [HttpGet]//api/department/sd
-        [Route("{name:alpha}")]//api/departmet/sd
+        [HttpGet("{name:alpha}")]//api/department/sd
         public Department findByName(string name)
         {
             Department dept = context.Department.FirstOrDefault(d => d.Name == name);
@@ -59,13 +70,17 @@ namespace APIAEC.Controllers
         //api/department :POST  {id:1,name:asd}
         public IActionResult AddDept(Department dept)
         {
-            context.Add(dept);
-            context.SaveChanges();
-            return Created($"http://localhost:5091/api/department/{dept.Id}", dept);//get byid
+            if (ModelState.IsValid == true)
+            {
+                context.Add(dept);
+                context.SaveChanges();
+                string url = Url.Link("GetDeptByIDRoute", new { id = dept.Id });
+                return Created(url, dept);//get byid
+            }
+            return BadRequest(ModelState);
         }
        
-        [HttpPut]//api/Department/1 :put (id) object (req body)
-        [Route("{id:int}")]
+        [HttpPut("{id:int}")]//api/Department/1 :put (id) object (req body)
        // public IActionResult Update([FromRoute]int id,[FromBody]Department deptfromRequest)
         public IActionResult Update(int id,Department deptfromRequest)
         {
@@ -83,20 +98,25 @@ namespace APIAEC.Controllers
             return NoContent();//
             //}
         }
-
-        [HttpDelete]
-        [Route("{id:int}")]
-        public IActionResult Remove(int id)
+        [HttpDelete("{id:int}")]
+        public ActionResult<GeneralResponse> Remove(int id)
         {
+            GeneralResponse response = new GeneralResponse();
             try
             {
                 Department dept = context.Department.FirstOrDefault(d => d.Id == id);
                 context.Department.Remove(dept);
                 context.SaveChanges();
-                return NoContent();
+                response.IsPass = true;
+                response.Data = "Object remove";
+                //return NoContent();
+                return response;
             }catch(Exception ex)
             {
-                return BadRequest(ex.Message);
+                response.IsPass = false;
+                response.Message = ex.Message;
+                //return BadRequest(ex.Message);
+                return response;
             }
         }
     }
