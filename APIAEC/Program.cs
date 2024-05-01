@@ -1,5 +1,6 @@
 
 using APIAEC.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace APIAEC
@@ -20,6 +21,10 @@ namespace APIAEC
             builder.Services.AddDbContext<ITIContext>(options =>
                 options.UseSqlServer("Data Source=.;Initial Catalog=ITI_WebAPI_AEC44;Integrated Security=True;Encrypt=False")
             );
+
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>().
+                AddEntityFrameworkStores<ITIContext>();
+
             builder.Services.AddCors(options => {
                 options.AddPolicy("MyPolicy", builder =>
                     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
