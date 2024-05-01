@@ -1,5 +1,6 @@
 ﻿using APIAEC.DTO;
 using APIAEC.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,13 +12,14 @@ namespace APIAEC.Controllers
     public class DepartmentController : ControllerBase
     {
         private readonly ITIContext context;
-
+        
         public DepartmentController(ITIContext context)
         {
             this.context = context;
         }
         //method name the same verb
         [HttpGet]//api/department:get
+        [Authorize]//search request header token unautho
         public ActionResult<GeneralResponse> GetAllDEpartment()//wrap response
         {
             List<DEpartmentDto> deptList= context.Department
