@@ -15,10 +15,12 @@ namespace APIAEC.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> userManager;
+        private readonly IConfiguration configuration;
 
-        public AccountController(UserManager<ApplicationUser> userManager)
+        public AccountController(UserManager<ApplicationUser> userManager,IConfiguration configuration)
         {
             this.userManager = userManager;
+            this.configuration = configuration;
         }
         [HttpPost("register")]
         //api/Account/Register:post body
@@ -69,14 +71,14 @@ namespace APIAEC.Controllers
                         }
                         SymmetricSecurityKey securityKey = 
                             new SymmetricSecurityKey(
-                                Encoding.UTF8.GetBytes("asdqeqeoi989865hhvbvfdf"));
+                                Encoding.UTF8.GetBytes(configuration["JWT:Key"]));
 
                         var mysigningCredentials = 
                             new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
                         //create toke
                         var mytoken = new JwtSecurityToken(
-                            issuer: "http://localhost:5091/",
-                            audience: "http://localhost:4200/",
+                            issuer: configuration["JWT:ValidIssuer"],
+                            audience: configuration["JWT:ValidAudiance"],
                             claims: myclaim,
                             expires:DateTime.Now.AddHours(3),
                             signingCredentials: mysigningCredentials
